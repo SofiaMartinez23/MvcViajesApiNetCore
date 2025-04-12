@@ -1,0 +1,376 @@
+﻿@model List<Lugar>
+
+@{
+    ViewData["Title"] = "Lugares de Interés";
+    Layout = "_Layout";
+    string defaultImageUrl = "https://img.freepik.com/foto-gratis/angulo-bosque-3d-arboles-ro0cas_23-2150800507.jpg";
+}
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<link href="~/css/lugaresindex.css" rel="stylesheet" />
+
+<div class="container mt-5">
+    <!-- Header Section -->
+    <div class="header-section mb-5">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h1 class="fw-bold text-primary">Lugares de Interés</h1>
+                <p class="text-muted">Descubre destinos fascinantes para tu próxima aventura</p>
+            </div>
+            <div class="col-md-6">
+                <div class="search-container">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="fas fa-search text-muted"></i>
+                        </span>
+                        <input type="text" class="form-control border-start-0 shadow-none"
+                               placeholder="Buscar destinos..." id="searchInput">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lugares Públicos Section -->
+    <div class="card border-0 shadow-sm mb-5 category-card">
+        <div class="card-header bg-white border-0 py-3">
+            <button class="category-toggle w-100 text-start d-flex justify-content-between align-items-center"
+                    id="togglePublicPlaces">
+                <div>
+                    <i class="fas fa-landmark text-primary me-2"></i>
+                    <span class="fw-bold fs-5">Lugares Públicos</span>
+                </div>
+                <i class="fas fa-chevron-down transition-icon" id="publicPlacesArrow"></i>
+            </button>
+        </div>
+        <div class="card-body py-4" id="publicPlacesContainer" style="display: none;">
+            <div class="row g-4">
+                @foreach (var lugar in Model.Where(l => l.Tipo.Trim().ToLower() == "publico"))
+                {
+                    <div class="col-md-6 col-lg-4 col-xl-3 lugar-item">
+                        <div class="card h-100 border-0 shadow-sm hover-card">
+                            <div class="lugar-image-container">
+                                <img src="@(string.IsNullOrEmpty(lugar.Imagen) ? defaultImageUrl : lugar.Imagen)"
+                                     alt="@lugar.Nombre" class="card-img-top lugar-image"
+                                     onerror="this.src='@defaultImageUrl';" />
+                                <div class="lugar-overlay">
+                                    <span class="badge bg-primary">Público</span>
+                                </div>
+                                <button id="heart-@lugar.IdLugar" class="btn-favorite" data-idlugar="@lugar.IdLugar">
+                                    <i class="far fa-bookmark"></i>
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title mb-1 fw-bold text-primary">@lugar.Nombre</h5>
+                                <p class="card-subtitle mb-2 text-muted">
+                                    <i class="fas fa-map-marker-alt me-1"></i>@lugar.Ubicacion
+                                </p>
+                                <p class="card-text lugar-description">@lugar.Descripcion</p>
+                            </div>
+                            <div class="card-footer bg-white border-0 pt-0">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">
+                                        <i class="far fa-clock me-1"></i>@lugar.Horario
+                                    </small>
+                                    <a asp-controller="Lugares" asp-action="Details" asp-route-idlugar="@lugar.IdLugar"
+                                       class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                        Ver más
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Lugares Privados Section -->
+    <div class="card border-0 shadow-sm mb-5 category-card">
+        <div class="card-header bg-white border-0 py-3">
+            <button class="category-toggle w-100 text-start d-flex justify-content-between align-items-center"
+                    id="togglePrivatePlaces">
+                <div>
+                    <i class="fas fa-key text-primary me-2"></i>
+                    <span class="fw-bold fs-5">Lugares Privados</span>
+                </div>
+                <i class="fas fa-chevron-down transition-icon" id="privatePlacesArrow"></i>
+            </button>
+        </div>
+        <div class="card-body py-4" id="privatePlacesContainer" style="display: none;">
+            <div class="row g-4">
+                @foreach (var lugar in Model.Where(l => l.Tipo.Trim().ToLower() == "privado"))
+                {
+                    <div class="col-md-6 col-lg-4 col-xl-3 lugar-item">
+                        <div class="card h-100 border-0 shadow-sm hover-card">
+                            <div class="lugar-image-container">
+                                <img src="@(string.IsNullOrEmpty(lugar.Imagen) ? defaultImageUrl : lugar.Imagen)"
+                                     alt="@lugar.Nombre" class="card-img-top lugar-image"
+                                     onerror="this.src='@defaultImageUrl';" />
+                                <div class="lugar-overlay">
+                                    <span class="badge bg-secondary">Privado</span>
+                                </div>
+                                <button id="heart-@lugar.IdLugar" class="btn-favorite" data-idlugar="@lugar.IdLugar">
+                                    <i class="far fa-bookmark"></i>
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title mb-1 fw-bold text-primary">@lugar.Nombre</h5>
+                                <p class="card-subtitle mb-2 text-muted">
+                                    <i class="fas fa-map-marker-alt me-1"></i>@lugar.Ubicacion
+                                </p>
+                                <p class="card-text lugar-description">@lugar.Descripcion</p>
+                            </div>
+                            <div class="card-footer bg-white border-0 pt-0">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">
+                                        <i class="far fa-clock me-1"></i>@lugar.Horario
+                                    </small>
+                                    <a asp-controller="Lugares" asp-action="Details" asp-route-idlugar="@lugar.IdLugar"
+                                       class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                        Ver más
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Styles -->
+<style>
+    /* Estilos generales */
+    body {
+        background-color: #f8f9fa;
+    }
+
+    .header-section {
+        position: relative;
+    }
+
+    .search-container {
+        max-width: 400px;
+        margin-left: auto;
+    }
+
+    /* Estilos para las categorías */
+    .category-card {
+        border-radius: 12px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .category-toggle {
+        background: none;
+        border: none;
+        padding: 0.75rem 1rem;
+        cursor: pointer;
+        color: #212529;
+    }
+
+        .category-toggle:hover {
+            color: #0d6efd;
+        }
+
+    .transition-icon {
+        transition: transform 0.3s ease;
+    }
+
+    /* Estilos para las tarjetas de lugares */
+    .lugar-item {
+        transition: transform 0.3s ease;
+    }
+
+    .hover-card {
+        border-radius: 10px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+        .hover-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+        }
+
+    .lugar-image-container {
+        position: relative;
+        height: 180px;
+        overflow: hidden;
+    }
+
+    .lugar-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+
+    .hover-card:hover .lugar-image {
+        transform: scale(1.05);
+    }
+
+    .lugar-overlay {
+        position: absolute;
+        top: 15px;
+        left: 15px;
+    }
+
+    .btn-favorite {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: white;
+        border: none;
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+        .btn-favorite i {
+            font-size: 18px;
+            color: #6c757d;
+            transition: all 0.3s ease;
+        }
+
+        .btn-favorite:hover i {
+            color: #0d6efd;
+        }
+
+        .btn-favorite.active i {
+            color: #0d6efd;
+            font-weight: 900;
+        }
+
+    .lugar-description {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+</style>
+
+<!-- Scripts -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+        // Toggle secciones
+        $('#togglePublicPlaces').click(function() {
+            $('#publicPlacesContainer').slideToggle();
+            $('#publicPlacesArrow').toggleClass('fa-chevron-down fa-chevron-up');
+            $('#publicPlacesArrow').toggleClass('rotate-icon');
+        });
+
+        $('#togglePrivatePlaces').click(function() {
+            $('#privatePlacesContainer').slideToggle();
+            $('#privatePlacesArrow').toggleClass('fa-chevron-down fa-chevron-up');
+            $('#privatePlacesArrow').toggleClass('rotate-icon');
+        });
+
+        // Búsqueda
+        $("#searchInput").on("input", function() {
+            const searchTerm = $(this).val().toLowerCase();
+            filterPlaces(searchTerm);
+        });
+
+        function filterPlaces(searchTerm) {
+            $(".lugar-item").each(function() {
+                const lugarNombre = $(this).find(".card-title").text().toLowerCase();
+                const lugarUbicacion = $(this).find(".card-subtitle").text().toLowerCase();
+                const matchesSearch = lugarNombre.includes(searchTerm) || lugarUbicacion.includes(searchTerm);
+                $(this).toggle(matchesSearch);
+            });
+        }
+
+        // Favoritos
+        $('.btn-favorite').click(function() {
+            const lugarId = $(this).data('idlugar');
+            const button = $(this);
+
+            $.ajax({
+                url: '/Lugares/AddFavorito',
+                type: 'POST',
+                data: { idLugar: lugarId },
+                success: function(response) {
+                    if (response.success) {
+                        button.addClass('active');
+                        button.find('i').removeClass('far').addClass('fas');
+
+                        // Mostrar notificación
+                        showNotification('Lugar guardado en favoritos', 'success');
+                    } else {
+                        showNotification('Este lugar ya está en tus favoritos', 'info');
+                    }
+                },
+                error: function() {
+                    showNotification('Error al guardar en favoritos', 'error');
+                }
+            });
+        });
+
+        // Función para mostrar notificaciones
+        function showNotification(message, type) {
+            // Eliminar notificaciones anteriores
+            $('.toast-notification').remove();
+
+            // Configurar clase según tipo
+            let bgClass = 'bg-success';
+            if (type === 'error') bgClass = 'bg-danger';
+            if (type === 'info') bgClass = 'bg-info';
+
+            // Crear notificación
+            const notification = $(`
+
+                <div class="toast-notification ${bgClass} text-white px-4 py-3 rounded-3 shadow-lg">
+                    <div class="d-flex align-items-center">
+                        <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-info-circle'} me-2"></i>
+                        <div>${message}</div>
+                    </div>
+                </div>
+            `);
+
+            // Añadir al DOM
+            $('body').append(notification);
+
+            // Posicionar
+            notification.css({
+                position: 'fixed',
+                bottom: '20px',
+                right: '20px',
+                zIndex: 9999,
+                opacity: 0,
+                transform: 'translateY(20px)'
+            });
+
+            // Animar entrada
+            setTimeout(function() {
+                notification.css({
+                    transition: 'all 0.3s ease',
+                    opacity: 1,
+                    transform: 'translateY(0)'
+                });
+            }, 10);
+
+            // Desaparecer después de 3 segundos
+            setTimeout(function() {
+                notification.css({
+                    opacity: 0,
+                    transform: 'translateY(20px)'
+                });
+                setTimeout(function() {
+                    notification.remove();
+                }, 300);
+            }, 3000);
+        }
+    });
+</script>

@@ -1,0 +1,135 @@
+﻿@model NugetViajesSMG.Models.LoginModel
+<section class="vh-100">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-6 text-black">
+                <div class="px-5 ms-xl-4 d-flex justify-content-center">
+                    <img src="~/images/EntdGehLogo.jpg" alt="Logo EntdGeh" style="width: 180px; height: 180px;">
+                </div>
+                <div class="d-flex align-items-center h-custom-2 px-5 ms-xl-4 mt-3 pt-2 pt-xl-0 mt-xl-n3">
+                    <form method="post" style="width: 23rem;" id="loginForm">
+                        <h3 class="fw-normal mb-3 pb-3" style="letter-spacing: 1px;">Log in</h3>
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        <div class="form-floating mb-4">
+                            <input asp-for="Email" class="form-control form-control-lg" required />
+                            <label asp-for="Email">Correo Electrónico</label>
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+                        <div class="form-floating mb-4 password-container">
+                            <input asp-for="Clave" type="password" class="form-control form-control-lg" id="passwordField" required />
+                            <label asp-for="Clave">Contraseña</label>
+                            <span class="password-toggle" onclick="togglePassword()">
+                                <i class="bi bi-eye-slash" id="toggleIcon"></i>
+                            </span>
+                            <span asp-validation-for="Clave" class="text-danger"></span>
+                        </div>
+                        <div class="pt-1 mb-4">
+                            <button class="btn btn-info btn-lg btn-block w-100" type="submit">Log In</button>
+                        </div>
+                        <p>¿No tienes una cuenta? <a asp-controller="Home" asp-action="CrearCuenta">Regístrate aquí</a></p>
+                    </form>
+                    @if (ViewBag.Error != null)
+                    {
+                        <div class="alert alert-danger" style="margin-top: 20px;">@ViewBag.Error</div>
+                    }
+                </div>
+            </div>
+            <div class="col-sm-6 px-0 d-none d-sm-block">
+                <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-login-form/img3.webp"
+                     alt="Login image" class="w-100 vh-100" style="object-fit: cover; object-position: left;">
+            </div>
+        </div>
+    </div>
+</section>
+<h2>@ViewData["MENSAJE"]</h2>
+
+<!-- Bootstrap Icons CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+<style>
+    .bg-image-vertical {
+        position: relative;
+        overflow: hidden;
+        background-repeat: no-repeat;
+        background-position: right center;
+        background-size: auto 100%;
+    }
+    /* Ajuste para el formulario flotante */
+    .form-floating > .form-control {
+        height: calc(3.5rem + 2px);
+        padding: 1rem 0.75rem;
+    }
+
+    .form-floating > label {
+        padding: 1rem 0.75rem;
+    }
+
+    .btn-block {
+        display: block;
+    }
+
+    /* Estilos para el toggle de contraseña */
+    .password-container {
+        position: relative;
+    }
+
+    .password-toggle {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        z-index: 10;
+        color: #6c757d;
+    }
+
+        .password-toggle:hover {
+            color: #212529;
+        }
+
+    /* Estilo para ocultar mensajes de error */
+    .text-danger {
+        display: none;
+    }
+
+    /* Mensaje de error personalizado */
+    .is-invalid + .text-danger {
+        display: block;
+    }
+</style>
+
+<script>
+    function togglePassword() {
+        const passwordField = document.getElementById('passwordField');
+        const toggleIcon = document.getElementById('toggleIcon');
+
+        if (passwordField.type === 'password') {
+            passwordField.type = 'text';
+            toggleIcon.classList.remove('bi-eye-slash');
+            toggleIcon.classList.add('bi-eye');
+        } else {
+            passwordField.type = 'password';
+            toggleIcon.classList.remove('bi-eye');
+            toggleIcon.classList.add('bi-eye-slash');
+        }
+    }
+
+    // Validación del formulario antes de enviarlo
+    document.getElementById('loginForm').addEventListener('submit', function (e) {
+        let isValid = true;
+        const inputs = document.querySelectorAll('input[required]');
+
+        inputs.forEach(input => {
+            if (!input.value.trim()) {
+                input.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                input.classList.remove('is-invalid');
+            }
+        });
+
+        if (!isValid) {
+            e.preventDefault();  // Evita el envío del formulario si hay campos vacíos
+        }
+    });
+</script>

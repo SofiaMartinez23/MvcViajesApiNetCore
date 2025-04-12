@@ -1,0 +1,217 @@
+﻿@model List<NugetViajesSMG.Models.UsuarioCompletoView>
+
+@{
+    ViewData["Title"] = "Usuarios";
+    Layout = "_Layout";
+    string defaultImageUrl = "https://cdn3d.iconscout.com/3d/premium/thumb/chico-avatar-6299533-5187865.png?f=webp";
+}
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<link href="~/css/usuariosindex.css" rel="stylesheet" />
+
+<div class="container mt-5">
+    <!-- Header Section -->
+    <div class="header-section mb-5">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h1 class="fw-bold text-primary">Usuarios</h1>
+                <p class="text-muted">Descubre y conéctate con otros viajeros</p>
+            </div>
+            <div class="col-md-6">
+                <div class="search-container">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="fas fa-search text-muted"></i>
+                        </span>
+                        <input type="text" class="form-control border-start-0 shadow-none"
+                               placeholder="Buscar usuarios..." id="searchInput">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Usuarios Section -->
+    <div class="card border-0 shadow-sm mb-5">
+        <div class="card-body py-4">
+            <div class="row g-4" id="usersContainer">
+                @foreach (var usuario in Model)
+                {
+                    <div class="col-md-6 col-lg-4 col-xl-3 usuario-item">
+                        <div class="card h-100 border-0 shadow-sm hover-card">
+                            <div class="usuario-avatar-container">
+                                <div class="avatar-background"></div>
+                                <div class="avatar-wrapper">
+                                    <img src="@(string.IsNullOrEmpty(usuario.AvatarUrl) ? defaultImageUrl : usuario.AvatarUrl)"
+                                         alt="@usuario.Nombre" class="avatar-image"
+                                         onerror="this.src='@defaultImageUrl';" />
+                                </div>
+                            </div>
+                            <div class="card-body text-center pt-0">
+                                <h5 class="card-title mt-4 mb-1 fw-bold">@usuario.Nombre</h5>
+                                <p class="card-subtitle mb-2 text-muted">
+                                    <i class="fas fa-globe-americas me-1"></i>@usuario.Nacionalidad
+                                </p>
+                                <div class="user-info d-flex justify-content-center mt-3">
+                                    <div class="info-item me-3">
+                                        <div class="info-value fw-bold">@usuario.Edad</div>
+                                        <div class="info-label small text-muted">Edad</div>
+                                    </div>
+                                   
+                                </div>
+                            </div>
+                            <div class="card-footer bg-white border-0 text-center">
+                                <div class="d-flex justify-content-center align-items-center">
+                                    <a asp-controller="Usuarios" asp-action="Details"
+                                       asp-route-idusuario="@usuario.IdUsuario"
+                                       class="btn btn-outline-primary rounded-pill me-2">
+                                        <i class="fas fa-user me-1"></i>Ver Perfil
+                                    </a>
+
+                                    <form method="post" action="/Usuarios/Seguir" class="ms-2">
+                                        <input type="hidden" name="idSeguido" value="@usuario.IdUsuario" />
+                                        <button type="submit" class="btn btn-outline-primary rounded-pill follow-btn" data-id="@usuario.IdUsuario" data-name="@usuario.Nombre">
+                                            <i class="fas fa-user-plus"></i>
+                                        </button>
+                                    </form>
+                                </div>
+
+                          
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Estilos generales */
+    body {
+        background-color: #f8f9fa;
+    }
+
+    .header-section {
+        position: relative;
+    }
+
+    .search-container {
+        max-width: 400px;
+        margin-left: auto;
+    }
+
+    /* Estilos para las tarjetas de usuarios */
+    .usuario-item {
+        transition: transform 0.3s ease;
+    }
+
+    .hover-card {
+        border-radius: 10px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+        .hover-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+        }
+
+    .usuario-avatar-container {
+        position: relative;
+        height: 120px;
+        overflow: hidden;
+    }
+
+    .avatar-background {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+    }
+
+    .avatar-wrapper {
+        position: absolute;
+        bottom: 0px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 120px;
+        height: 120px;
+        border-radius: 10%;
+        background-color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 4px solid white;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+
+    .avatar-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 20%;
+    }
+
+    .user-info {
+        padding: 10px 0;
+        border-top: 1px solid #f0f0f0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .info-item {
+        padding: 0 10px;
+    }
+
+    .info-value {
+        font-size: 1.1rem;
+        color: #333;
+    }
+
+    .follow-btn {
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+    }
+
+    .registro-fecha {
+        color: #999;
+        font-size: 0.85rem;
+    }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+        // Confirmación para seguir a un usuario
+        $(".follow-btn").click(function(e) {
+            e.preventDefault();
+            const button = $(this);
+            const userId = button.data("id");
+            const userName = button.data("name");
+
+            // Confirmación para seguir
+            Swal.fire({
+                title: '¿Quieres seguir a este usuario?',
+                text: `Estás a punto de seguir a ${userName}.`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, seguir',
+                cancelButtonText: 'No, cancelar',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Enviar el formulario para registrar el seguimiento en la base de datos
+                    button.closest("form").submit();
+                }
+            });
+        });
+    });
+</script>
