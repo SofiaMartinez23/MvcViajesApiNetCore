@@ -3,173 +3,54 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - EntdGeh</title>
-    <script type="importmap"></script>
+    <title>@ViewData["Title"] - MvcViajesApiNetCore</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/ViajesMvcNetCore.styles.css" asp-append-version="true" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-    <style>
-        /* Establece el contenedor principal para que ocupe el máximo espacio disponible */
-        body {
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh; /* Asegura que el body ocupe el 100% de la altura de la ventana */
-        }
-
-        /* El footer se empuja al final */
-        footer {
-            margin-top: auto; /* Esto empuja el footer al final */
-        }
-
-        /* Estilos para el menú de navegación */
-        .navbar {
-            background-color: #000000;
-            padding: 1rem 2rem;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-
-            .navbar .navbar-brand {
-                font-weight: bold;
-                font-size: 1.75rem;
-                text-transform: uppercase;
-            }
-
-        .navbar-nav {
-            display: flex;
-            justify-content: flex-end; /* Alinea los elementos a la derecha */
-            align-items: center;
-            width: 100%;
-        }
-
-            .navbar-nav .nav-item {
-                margin-left: 1rem;
-                margin-right: 1rem;
-            }
-
-            .navbar-nav .nav-link {
-                color: white;
-                font-size: 1.1rem;
-                font-weight: 500;
-                transition: background-color 0.3s ease, color 0.3s ease;
-            }
-
-                .navbar-nav .nav-link:hover,
-                .navbar-nav .nav-item.active .nav-link {
-                    background-color: #333231;
-                    color: white;
-                    border-radius: 5px;
-                }
-
-            .navbar-nav .nav-item.active .nav-link {
-                background-color: #333231;
-                color: white;
-            }
-
-            .navbar-nav .nav-link {
-                position: relative;
-                padding: 10px 20px;
-                border-radius: 5px;
-            }
-
-                .navbar-nav .nav-link::after {
-                    content: '';
-                    position: absolute;
-                    width: 0%;
-                    height: 2px;
-                    background-color: #3c4a76;
-                    transition: width 0.3s ease;
-                    bottom: 0;
-                    left: 50%;
-                    transform: translateX(-50%);
-                }
-
-                .navbar-nav .nav-link:hover::after {
-                    width: 100%;
-                }
-
-            .navbar-nav.ml-auto .nav-item:last-child {
-                margin-left: auto;
-            }
-
-        /* Estilos del icono de perfil */
-        .profile-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-    </style>
+    <link rel="stylesheet" href="~/MvcViajesApiNetCore.styles.css" asp-append-version="true" />
 </head>
 <body>
-    @{
-        var usuario = Context.Session.GetString("NombreUsuario");
-        var avatar = Context.Session.GetString("AvatarUrlUsuario");
-        var id = Context.Session.GetInt32("IdUsuario");
-        var correoUsuario = Context.Session.GetString("CorreoUsuario");
-        var claveUsuario = Context.Session.GetString("ClaveUsuario");
-        var confirmarClaveUsuario = Context.Session.GetString("ConfirmarClaveUsuario");
-        var preferenciaViajeUsuario = Context.Session.GetString("PreferenciaViajeUsuario");
-    }
     <header>
-        <nav class="navbar navbar-expand-sm navbar-dark bg-dark">
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Lugares" asp-action="Index">EntdGeh</a>
+                <a class="navbar-brand" asp-controller="Libros" asp-action="Index">MvcViajesApiNetCore</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav">
+                    <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
-                            <a class="nav-link link-light mx-2" asp-controller="Lugares" asp-action="Index"><i class="fas fa-map-marker-alt pe-2"></i>Lugares</a>
+                            <a class="nav-link"
+                               asp-controller="Managed" asp-action="Login">Login</a>
                         </li>
-                        @if (usuario != null)
-                        {
-                            <a class="nav-link link-light mx-2" asp-controller="Usuarios" asp-action="Index">
-                                <i class="fas fa-users pe-2"></i>Usuarios
-                            </a>
-                        }
-                        <li class="nav-item link-light ms-3">
-                            @if (usuario != null && avatar != null && id.HasValue && correoUsuario != null && claveUsuario != null && confirmarClaveUsuario != null && preferenciaViajeUsuario != null)
-                            {
-                                <div class="usuario d-flex align-items-center">
-                                    <!-- Avatar como enlace al perfil -->
-                                    <a href="@Url.Action("Perfil", "Usuarios", new { id = id.Value })">
-                                        <img src="@avatar" alt="Avatar" class="rounded-circle" style="width: 30px; height: 30px; margin-right: 8px;" />
-                                    </a>
-                                    <!-- Botón de logout -->
-                                    <a class="btn btn-dark btn-rounded" asp-controller="Home" asp-action="Logout">
-                                        <img src="https://cdn-icons-png.flaticon.com/128/3456/3456192.png" alt="Logout" style="width: 20px; height: 20px; filter: invert(100%);">
-                                    </a>
-                                </div>
-                            }
-
-                            else
-                            {
-                                <a asp-controller="Managed" asp-action="Login" class="d-flex link-light align-items-center">
-                                    <div class="profile-circle"><i class="fas fa-user"></i></div>
-
-                                </a>
-                            }
+                        <li class="nav-item">
+                            <a class="nav-link"
+                               asp-controller="Lugares" asp-action="Index">Lugares</a>
                         </li>
-
+                        <li class="nav-item">
+                            <a class="nav-link"
+                               asp-controller="Usuarios" asp-action="Index">Usuarios</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link"
+                               asp-controller="Usuarios" asp-action="Perfil">Perfil</a>
+                        </li>
                     </ul>
                 </div>
             </div>
         </nav>
     </header>
-
-    <div class="container flex-grow-1">
+    <div class="container">
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="border-top footer text-muted m-3 mt-auto">
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; 2024 - MvcViajesApiNetCore - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+        </div>
     </footer>
-
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>

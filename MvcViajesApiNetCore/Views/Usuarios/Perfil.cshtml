@@ -11,13 +11,15 @@
                 <button id="lugaresInsertadosBtn" class="active">Mis Lugares</button>
                 <button id="lugaresFavoritosBtn">Favoritos</button>
             </div>
-            <div id="containerlugares" class="m-3"></div>
+            <div id="containerlugares" class="m-3">
+
+            </div>
         </div>
     </div>
 
     <div class="profile-right-section">
         <div class="profile-action-edit">
-            <a asp-controller="Home" asp-action="EditarPerfil" asp-route-idUsuario="@Model.IdUsuario" class="edit-profile-btn" title="Edit perfil">
+            <a asp-controller="Usuarios" asp-action="Edit" asp-route-idUsuario="@Model.IdUsuario" class="edit-profile-btn" title="Edit perfil">
                 <i class="fas fa-pencil-alt"></i>
             </a>
         </div>
@@ -208,21 +210,21 @@
     <script>
         $(document).ready(function() {
             var idUsuario = "@Model.IdUsuario";
-            var request = "/Home/_Lugares?idUsuario=" + idUsuario;
-            var request2 = "/Home/_Seguidos?idusuario=" + idUsuario;
+            var request = "/Usuarios/_Lugares?idUsuario=" + idUsuario;
+            var request2 = "/Usuarios/_Seguidos?idusuario=" + idUsuario;
 
             $("#containerlugares").load(request);
             $("#containerseguidores").load(request2);
 
             $("#lugaresInsertadosBtn").click(function() {
                 $(this).addClass("active").siblings().removeClass("active");
-                request = "/Home/_Lugares?idUsuario=" + idUsuario;
+                request = "/Usuarios/_Lugares?idUsuario=" + idUsuario;
                 $("#containerlugares").load(request);
             });
 
             $("#lugaresFavoritosBtn").click(function() {
                 $(this).addClass("active").siblings().removeClass("active");
-                request = "/Home/_Favoritos?idUsuario=" + idUsuario;
+                request = "/Usuarios/_Favoritos?idUsuario=" + idUsuario;
                 $("#containerlugares").load(request);
             });
         });
