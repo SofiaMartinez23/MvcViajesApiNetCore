@@ -66,16 +66,12 @@ namespace MvcViajesApiNetCore.Controllers
             await this.service.UpdateLugarAsync(
                 lugar.IdLugar, lugar.Nombre, lugar.Descripcion, lugar.Ubicacion,
                 lugar.Categoria, lugar.Horario, lugar.Imagen,
-                lugar.Tipo, lugar.IdUsuario);
+                lugar.Tipo);
 
-            return RedirectToAction("Index");
+            return RedirectToAction("Perfil", "Usuarios");
         }
 
-        [AuthorizeUsuarios]
-        public async Task<IActionResult> Delete(int idLugar)
-        {
-            await this.service.DeleteLugarAsync(idLugar);
-            return RedirectToAction("Index");
-        }
+       
+
     }
 }

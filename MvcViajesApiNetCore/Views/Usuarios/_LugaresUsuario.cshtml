@@ -41,14 +41,7 @@
                         </div>
                         <div class="card-footer d-flex justify-content-between align-items-center bg-white">
                             <a asp-controller="Lugares" asp-action="Details" asp-route-idlugar="@lugar.IdLugar" class="btn btn-primary btn-sm">Leer más</a>
-                            <div class="card-actions">
-                                <a asp-controller="Lugares" asp-action="Edit" asp-route-idLugar="@lugar.IdLugar" class="edit-link" title="Editar">
-                                    <i class="fas fa-pencil-alt text-primary"></i>
-                                </a>
-                                <a href="#" class="delete-link" data-id="@lugar.IdLugar" title="DeleteLugar">
-                                    <i class="fas fa-trash-alt text-danger"></i>
-                                </a>
-                            </div>
+                            
                         </div>
                         <div class="date-badge">
                             <small><i class="far fa-clock me-1"></i> @lugar.Horario</small>
@@ -65,60 +58,7 @@
 <!-- SweetAlert2 JS -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.4.27/dist/sweetalert2.min.js"></script>
 
-<script>
-    $(document).ready(function() {
-        // Eliminar lugar con SweetAlert
-        $('.delete-link').click(function(e) {
-            e.preventDefault();
 
-            var idLugar = $(this).data('id');
-            var card = $(this).closest('.col');
-            var lugarName = $(this).closest('.card').find('.card-title').text();
-
-            Swal.fire({
-                title: '¿Estás seguro?',
-                text: `¿Deseas eliminar el lugar "${lugarName}"?`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Sí, eliminar',
-                cancelButtonText: 'Cancelar'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.post('/Usuarios/DeleteLugar', { idLugar: idLugar }, function () {
-                        // Animación de desvanecimiento al eliminar
-                        card.fadeOut(300, function() {
-                            $(this).remove();
-
-                            // Mostrar mensaje de éxito con SweetAlert
-                            Swal.fire({
-                                icon: 'success',
-                                title: '¡Eliminado!',
-                                text: 'El lugar ha sido eliminado correctamente.',
-                                timer: 2000,
-                                timerProgressBar: true,
-                                showConfirmButton: false
-                            });
-
-                            // Verificar si ya no hay más lugares y mostrar el mensaje de "no hay lugares"
-                            if ($('#placesContainer .col').length === 0) {
-                                location.reload();
-                            }
-                        });
-                    }).fail(function() {
-                        // Mensaje de error con SweetAlert
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: 'No se pudo eliminar el lugar. Intenta nuevamente.'
-                        });
-                    });
-                }
-            });
-        });
-    });
-</script>
 
 <style>
     :root {

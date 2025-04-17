@@ -107,14 +107,71 @@ namespace MvcViajesApiNetCore.Services
 
         public async Task<List<UsuarioCompletoView>> GetUsuariossAsync()
         {
-            string token =
-                this.contextAccessor.HttpContext.User
-                .FindFirst(z => z.Type == "TOKEN").Value;
+            string token = this.contextAccessor.HttpContext.User
+                .FindFirst(z => z.Type == "TOKEN")?.Value;
+
+            if (string.IsNullOrEmpty(token))
+            {
+                throw new UnauthorizedAccessException("No se encontró el token de usuario.");
+            }
+
+            int idUsuario = -1;
+
+            var userIdClaim = this.contextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim != null && int.TryParse(userIdClaim.Value, out idUsuario))
+            {
+                // IdUsuario found in NameIdentifier
+            }
+            else
+            {
+                userIdClaim = this.contextAccessor.HttpContext.User.FindFirst("UserId");
+                if (userIdClaim != null && int.TryParse(userIdClaim.Value, out idUsuario))
+                {
+                    // IdUsuario found in "UserId" claim
+                }
+                else
+                {
+                    UsuarioCompletoView perfil = await GetPerfilAsync();
+                    if (perfil != null && perfil.IdUsuario != 0)
+                    {
+                        idUsuario = perfil.IdUsuario;
+                    }
+                    else
+                    {
+                        throw new Exception("No se pudo extraer el IdUsuario del token o del perfil del usuario.");
+                    }
+                }
+            }
+
+
             string request = "api/usuarios";
+            List<UsuarioCompletoView> usuarios = await
+                this.CallApiAsync<List<UsuarioCompletoView>>(request, token);
+
+            if (idUsuario != -1 && usuarios != null) 
+            {
+                usuarios = usuarios.Where(u => u.IdUsuario != idUsuario).ToList();
+            }
+
+            return usuarios;
+        }
+
+        public async Task<List<UsuarioCompletoView>> BuscarUsuariosPorNombreAsync(string nombre)
+        {
+            string token = this.contextAccessor.HttpContext.User
+                .FindFirst(z => z.Type == "TOKEN")?.Value;
+
+            if (string.IsNullOrEmpty(token))
+            {
+                throw new UnauthorizedAccessException("No se encontró el token de usuario.");
+            }
+
+            string request = $"api/Usuarios/BuscarByNombre?nombre={nombre}";
             List<UsuarioCompletoView> usuarios = await
                 this.CallApiAsync<List<UsuarioCompletoView>>(request, token);
             return usuarios;
         }
+
 
         public async Task<UsuarioCompletoView> FindUsuarioAsync
             (int idUsuario)
@@ -138,6 +195,7 @@ namespace MvcViajesApiNetCore.Services
                 this.CallApiAsync<UsuarioCompletoView>(request, token);
             return empleado;
         }
+
         public async Task UpdateUsuarioAsync(
         string nombre, string email, int edad, string nacionalidad,
         string preferenciaViaje, string clave, string confirmarClave,
@@ -327,36 +385,37 @@ namespace MvcViajesApiNetCore.Services
         public async Task UpdateLugarAsync(
         int idLugar, string nombre, string descripcion, string ubicacion,
         string categoria, DateTime horario, string imagen,
-        string tipo, int idUsuario)
+        string tipo)
         {
             string token = this.contextAccessor.HttpContext.User
-                .FindFirst(z => z.Type == "TOKEN").Value;
+                .FindFirst(z => z.Type == "TOKEN")?.Value;
 
             if (string.IsNullOrEmpty(token))
             {
                 throw new UnauthorizedAccessException("No se encontró el token de usuario.");
             }
 
-            int loggedInUserId = -1;
+            int idUsuario = -1;
 
             var userIdClaim = this.contextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim != null && int.TryParse(userIdClaim.Value, out loggedInUserId))
+            if (userIdClaim != null && int.TryParse(userIdClaim.Value, out idUsuario))
             {
                 // IdUsuario found in NameIdentifier
             }
             else
             {
                 userIdClaim = this.contextAccessor.HttpContext.User.FindFirst("UserId");
-                if (userIdClaim != null && int.TryParse(userIdClaim.Value, out loggedInUserId))
+                if (userIdClaim != null && int.TryParse(userIdClaim.Value, out idUsuario))
                 {
                     // IdUsuario found in "UserId" claim
                 }
                 else
                 {
+                    // If not found in claims, fallback to getting from the profile
                     UsuarioCompletoView perfil = await GetPerfilAsync();
                     if (perfil != null && perfil.IdUsuario != 0)
                     {
-                        loggedInUserId = perfil.IdUsuario;
+                        idUsuario = perfil.IdUsuario;
                     }
                     else
                     {
@@ -367,7 +426,7 @@ namespace MvcViajesApiNetCore.Services
 
             using (HttpClient client = new HttpClient())
             {
-                string request = "api/lugares/" + idLugar;
+                string request = "api/lugares/updatelugar/" + idLugar;
                 client.BaseAddress = new Uri(this.UrlApi);
                 client.DefaultRequestHeaders.Clear();
                 client.DefaultRequestHeaders.Accept.Add(this.Header);
@@ -392,6 +451,8 @@ namespace MvcViajesApiNetCore.Services
 
                 if (!response.IsSuccessStatusCode)
                 {
+                    string errorContent = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"Error al actualizar lugar: {response.StatusCode} - {errorContent}"); // Esto imprimirá el contenido del error en la consola
                     throw new Exception("Error al actualizar lugar: " + response.StatusCode);
                 }
             }
@@ -402,26 +463,31 @@ namespace MvcViajesApiNetCore.Services
         public async Task DeleteLugarAsync(int idLugar)
         {
             string token = this.contextAccessor.HttpContext.User
-                .FindFirst(z => z.Type == "TOKEN").Value;
+                .FindFirst(z => z.Type == "TOKEN")?.Value;
+
+            if (string.IsNullOrEmpty(token))
+            {
+                throw new UnauthorizedAccessException("No se encontró el token de usuario.");
+            }
 
             using (HttpClient client = new HttpClient())
             {
-                string request = "api/lugares/" + idLugar;
                 client.BaseAddress = new Uri(this.UrlApi);
                 client.DefaultRequestHeaders.Clear();
                 client.DefaultRequestHeaders.Accept.Add(this.Header);
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
+                string request = "api/lugares/" + idLugar; // Asumiendo que la API espera DELETE en esta ruta
                 HttpResponseMessage response = await client.DeleteAsync(request);
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    throw new Exception("Error al eliminar lugar: " + response.StatusCode);
+                    throw new Exception($"Error al eliminar lugar: {response.StatusCode}");
                 }
             }
         }
 
-    #endregion
+        #endregion
 
         #region ZONA COMENTARIOS
 

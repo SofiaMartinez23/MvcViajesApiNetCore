@@ -56,12 +56,16 @@ namespace MvcOAuthEmpleados.Controllers
                 return RedirectToAction("Perfil", "Usuarios");
             }
         }
+        public async Task<IActionResult> Registro()
+        {
+            return View();
+        }
 
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync
                 (CookieAuthenticationDefaults.AuthenticationScheme);
-            return RedirectToAction("Index", "Managed");
+            return RedirectToAction("Login", "Managed");
         }
     }
 }

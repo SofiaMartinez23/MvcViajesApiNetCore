@@ -5,14 +5,11 @@
 
 <div class="profile-container">
     <div class="profile-left-section">
-        <!-- Sección de información adicional (lugares añadidos) -->
         <div class="additional-data-section">
             <div class="title-with-back-btn">
                 <h3>Lugares añadidos</h3>
-
             </div>
             <div id="containerlugares" class="lugares-section">
-                <!-- Aquí se cargarán los lugares mediante AJAX -->
                 <div class="loading-lugares">
                     <i class="fas fa-spinner fa-spin"></i>
                     <span>Cargando lugares...</span>
@@ -24,7 +21,6 @@
     <div class="profile-right-section">
         <div class="profile-header">
             <div class="profile-avatar">
-                <!-- Aquí mostramos la imagen de avatar del usuario -->
                 <img src="@Model.AvatarUrl" alt="Avatar" class="avatar-img" />
             </div>
             <h2 class="profile-name">@Model.Nombre</h2>
@@ -46,6 +42,26 @@
                             <span class="detail-value">@Model.PreferenciaViaje</span>
                         </div>
                     </div>
+                    @if (!string.IsNullOrEmpty(Model.Edad.ToString()))
+                    {
+                        <div class="detail-item">
+                            <i class="fas fa-birthday-cake"></i>
+                            <div class="detail-content">
+                                <span class="detail-label">Edad</span>
+                                <span class="detail-value">@Model.Edad</span>
+                            </div>
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.Nacionalidad))
+                    {
+                        <div class="detail-item">
+                            <i class="fas fa-flag"></i>
+                            <div class="detail-content">
+                                <span class="detail-label">Nacionalidad</span>
+                                <span class="detail-value">@Model.Nacionalidad</span>
+                            </div>
+                        </div>
+                    }
                 </div>
             </div>
         </div>
@@ -142,7 +158,7 @@
     <script>
         $(document).ready(function() {
             var idUsuario = "@Model.IdUsuario";
-            var request = "/Usuarios/_Lugares?idUsuario=" + idUsuario;
+            var request = "/Usuarios/_LugaresUsuario?idUsuario=" + idUsuario;
 
             // Cargar los lugares añadidos por el usuario de forma automática
             $("#containerlugares").load(request, function(response, status, xhr) {

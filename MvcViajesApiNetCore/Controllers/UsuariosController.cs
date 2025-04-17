@@ -15,18 +15,29 @@ namespace MvcViajesApiNetCore.Controllers
         }
 
         [AuthorizeUsuarios]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string nombreBusqueda)
         {
-            List<UsuarioCompletoView> usuarios =
-                await this.service.GetUsuariossAsync();
+            List<UsuarioCompletoView> usuarios;
+
+            if (!string.IsNullOrEmpty(nombreBusqueda))
+            {
+                usuarios = await this.service.BuscarUsuariosPorNombreAsync(nombreBusqueda);
+            }
+            else
+            {
+                usuarios = await this.service.GetUsuariossAsync();
+            }
+
             return View(usuarios);
         }
+
 
         [AuthorizeUsuarios]
         public async Task<IActionResult> Details(int idUsuario)
         {
             UsuarioCompletoView usuario = await
                     this.service.FindUsuarioAsync(idUsuario);
+
             return View(usuario);
         }
 
@@ -53,15 +64,30 @@ namespace MvcViajesApiNetCore.Controllers
         {
             UsuarioCompletoView usuario = await
                 this.service.GetPerfilAsync();
+
+            var lugares = await this.service.GetLugaresPorUsuarioAsync(usuario.IdUsuario);
+            ViewBag.LugaresCreadosCount = lugares.Count;
+
+            var lugaresFavoritos = await this.service.GetFavoritosUsuarioAsync(usuario.IdUsuario);
+            ViewBag.LugaresFavoritosCount = lugaresFavoritos.Count;
+
             return View(usuario);
         }
-        
+
         [AuthorizeUsuarios]
         public async Task<IActionResult> _Lugares(int idUsuario)
         {
             List<Lugar> lugares = await
                     this.service.GetLugaresPorUsuarioAsync(idUsuario);
             return PartialView("_Lugares", lugares);
+        }
+
+        [AuthorizeUsuarios]
+        public async Task<IActionResult> _LugaresUsuario(int idUsuario)
+        {
+            List<Lugar> lugares = await
+                    this.service.GetLugaresPorUsuarioAsync(idUsuario);
+            return PartialView("_LugaresUsuario", lugares);
         }
 
         [AuthorizeUsuarios]
@@ -72,5 +98,12 @@ namespace MvcViajesApiNetCore.Controllers
             return PartialView("_Favoritos", fav);
         }
 
+
+        [AuthorizeUsuarios]
+        public async Task<IActionResult> DeleteLugar(int idLugar)
+        {
+            await this.service.DeleteLugarAsync(idLugar);
+            return RedirectToAction("Index");
+        }
     }
 }

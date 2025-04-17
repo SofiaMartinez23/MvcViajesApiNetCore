@@ -12,7 +12,6 @@
                 <button id="lugaresFavoritosBtn">Favoritos</button>
             </div>
             <div id="containerlugares" class="m-3">
-
             </div>
         </div>
     </div>
@@ -48,6 +47,40 @@
                             <span class="detail-value">@Model.PreferenciaViaje</span>
                         </div>
                     </div>
+                    @if (!string.IsNullOrEmpty(Model.Edad.ToString()))
+                    {
+                        <div class="detail-item">
+                            <i class="fas fa-birthday-cake"></i>
+                            <div class="detail-content">
+                                <span class="detail-label">Edad</span>
+                                <span class="detail-value">@Model.Edad</span>
+                            </div>
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.Nacionalidad))
+                    {
+                        <div class="detail-item">
+                            <i class="fas fa-flag"></i>
+                            <div class="detail-content">
+                                <span class="detail-label">Nacionalidad</span>
+                                <span class="detail-value">@Model.Nacionalidad</span>
+                            </div>
+                        </div>
+                    }
+                    <div class="detail-item">
+                        <i class="fas fa-map-pin"></i>
+                        <div class="detail-content">
+                            <span class="detail-label">Lugares Creados</span>
+                            <span class="detail-value" id="lugaresCreadosCount">@ViewBag.LugaresCreadosCount</span>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <i class="fas fa-heart"></i>
+                        <div class="detail-content">
+                            <span class="detail-label">Lugares Favoritos</span>
+                            <span class="detail-value" id="lugaresFavoritosCount">@ViewBag.LugaresFavoritosCount</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -57,7 +90,6 @@
             </a>
         </div>
         <div id="containerseguidores" class="seguidores-container m-3">
-            <!-- Los elementos de los seguidores irán aquí dinámicamente -->
         </div>
     </div>
 </div>
@@ -213,20 +245,30 @@
             var request = "/Usuarios/_Lugares?idUsuario=" + idUsuario;
             var request2 = "/Usuarios/_Seguidos?idusuario=" + idUsuario;
 
-            $("#containerlugares").load(request);
+            $("#containerlugares").load(request, function() {
+                // Callback function executed after lugares are loaded
+                actualizarContadorLugares();
+            });
             $("#containerseguidores").load(request2);
 
             $("#lugaresInsertadosBtn").click(function() {
                 $(this).addClass("active").siblings().removeClass("active");
                 request = "/Usuarios/_Lugares?idUsuario=" + idUsuario;
-                $("#containerlugares").load(request);
+                $("#containerlugares").load(request, function() {
+                    actualizarContadorLugares();
+                });
             });
 
             $("#lugaresFavoritosBtn").click(function() {
                 $(this).addClass("active").siblings().removeClass("active");
                 request = "/Usuarios/_Favoritos?idUsuario=" + idUsuario;
-                $("#containerlugares").load(request);
+                $("#containerlugares").load(request, function() {
+                    // If favoritos don't contribute to the created count, no update needed here
+                });
             });
+
+
+       
         });
     </script>
 }
