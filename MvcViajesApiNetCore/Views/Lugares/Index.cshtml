@@ -298,7 +298,7 @@
             const button = $(this);
 
             $.ajax({
-                url: '/Lugares/AddFavorito',
+                url: '/Lugares/AddToFavoritos',
                 type: 'POST',
                 data: { idLugar: lugarId },
                 success: function(response) {

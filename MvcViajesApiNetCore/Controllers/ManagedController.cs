@@ -56,10 +56,33 @@ namespace MvcOAuthEmpleados.Controllers
                 return RedirectToAction("Perfil", "Usuarios");
             }
         }
+
+        [HttpGet]
         public async Task<IActionResult> Registro()
         {
             return View();
         }
+
+        [HttpPost]
+        public async Task<IActionResult> Registro(UsuarioCompletoView model)
+        {
+
+            await this.service.InsertUsuarioAsync(
+                model.Nombre,
+                model.Email,
+                model.Edad,
+                model.Nacionalidad,
+                model.PreferenciaViaje,
+                model.Clave,
+                model.ConfirmarClave,
+                model.AvatarUrl
+            );
+               
+            return RedirectToAction("Login", "Managed");
+
+        }
+
+
 
         public async Task<IActionResult> Logout()
         {

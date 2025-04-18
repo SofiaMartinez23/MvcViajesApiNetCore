@@ -147,7 +147,6 @@
 </style>
 
 <div class="container">
-    <!-- Keeping the exact same structure as your original -->
     <div class="place-card">
         <img src="@(string.IsNullOrEmpty(Model.Imagen) ? defaultImageUrl : Model.Imagen)"
              alt="@Model.Nombre" class="place-image" onerror="this.src='@defaultImageUrl';" />
@@ -163,18 +162,18 @@
                 <p><strong>Tipo:</strong> <span class="type-badge">@Model.Tipo</span></p>
                 <div class="add-comment-section">
                     <h5>Añadir Comentario</h5>
-                    <form asp-action="CreateComment" asp-route-idlugar="@Model.IdLugar" method="post">
-                        <input type="hidden" name="idlugar" value="@Model.IdLugar" />
-                        @if (Context.Session.GetInt32("IdUsuario").HasValue)
-                        {
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        <form asp-action="CreateComment" asp-route-idlugar="@Model.IdLugar" method="post">
+                            <input type="hidden" name="idlugar" value="@Model.IdLugar" />
                             <textarea name="comentario" class="form-control mb-3" rows="2" placeholder="Escribe tu comentario..." required></textarea>
                             <button type="submit" class="btn submit-comment-btn w-100">Enviar Comentario</button>
-                        }
-                        else
-                        {
-                            <p>Debes iniciar sesión para dejar un comentario.</p>
-                        }
-                    </form>
+                        </form>
+                    }
+                    else
+                    {
+                        <p>Debes iniciar sesión para dejar un comentario.</p>
+                    }
                 </div>
             </div>
             <div class="col-md-6">
@@ -192,7 +191,6 @@
     </div>
 </div>
 
-<!-- Keeping your exact same JavaScript -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     $(document).ready(function() {

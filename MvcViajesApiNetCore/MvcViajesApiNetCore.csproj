@@ -10,7 +10,7 @@
     <PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="6.0.0" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="9.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="NugetViajesSMG" Version="1.0.0" />
+    <PackageReference Include="NugetViajesSMG" Version="2.0.0" />
   </ItemGroup>
 
   <ItemGroup>

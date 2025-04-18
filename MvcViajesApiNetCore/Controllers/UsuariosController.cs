@@ -66,10 +66,10 @@ namespace MvcViajesApiNetCore.Controllers
                 this.service.GetPerfilAsync();
 
             var lugares = await this.service.GetLugaresPorUsuarioAsync(usuario.IdUsuario);
-            ViewBag.LugaresCreadosCount = lugares.Count;
+            ViewBag.LugaresCreadosCount = lugares?.Count ?? 0;
 
             var lugaresFavoritos = await this.service.GetFavoritosUsuarioAsync(usuario.IdUsuario);
-            ViewBag.LugaresFavoritosCount = lugaresFavoritos.Count;
+            ViewBag.LugaresFavoritosCount = lugaresFavoritos?.Count ?? 0;
 
             return View(usuario);
         }
@@ -104,6 +104,13 @@ namespace MvcViajesApiNetCore.Controllers
         {
             await this.service.DeleteLugarAsync(idLugar);
             return RedirectToAction("Index");
+        }
+
+        [AuthorizeUsuarios]
+        public async Task<IActionResult> DeleteFavorito(int idUsuario, int idLugar)
+        {
+            await this.service.DeleteFavoritosAsync(idUsuario, idLugar);
+            return RedirectToAction("_Favoritos");
         }
     }
 }

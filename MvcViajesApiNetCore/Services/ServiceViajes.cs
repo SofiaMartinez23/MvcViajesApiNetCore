@@ -107,13 +107,6 @@ namespace MvcViajesApiNetCore.Services
 
         public async Task<List<UsuarioCompletoView>> GetUsuariossAsync()
         {
-            string token = this.contextAccessor.HttpContext.User
-                .FindFirst(z => z.Type == "TOKEN")?.Value;
-
-            if (string.IsNullOrEmpty(token))
-            {
-                throw new UnauthorizedAccessException("No se encontró el token de usuario.");
-            }
 
             int idUsuario = -1;
 
@@ -146,7 +139,7 @@ namespace MvcViajesApiNetCore.Services
 
             string request = "api/usuarios";
             List<UsuarioCompletoView> usuarios = await
-                this.CallApiAsync<List<UsuarioCompletoView>>(request, token);
+                this.CallApiAsync<List<UsuarioCompletoView>>(request);
 
             if (idUsuario != -1 && usuarios != null) 
             {
@@ -196,6 +189,78 @@ namespace MvcViajesApiNetCore.Services
             return empleado;
         }
 
+        public async Task<int> GetNextUsuarioIdAsync()
+        {
+            using (HttpClient client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(this.UrlApi);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(this.Header);
+
+                string request = "api/usuarios";
+
+                HttpResponseMessage response = await client.GetAsync(request);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    string json = await response.Content.ReadAsStringAsync();
+                    List<UsuarioCompletoView> usuarios = JsonConvert.DeserializeObject<List<UsuarioCompletoView>>(json);
+                    if (usuarios != null && usuarios.Any())
+                    {
+                        return usuarios.Max(u => u.IdUsuario) + 1;
+                    }
+                    else
+                    {
+                        return 1;
+                    }
+                }
+                else
+                {
+                    throw new Exception("Error al obtener la lista de usuarios para generar el próximo ID: " + response.StatusCode);
+                }
+            }
+        }
+
+
+        public async Task InsertUsuarioAsync(
+           string nombre, string email, int edad, string nacionalidad,
+           string preferenciaViaje, string clave, string confirmarClave,
+           string avatarUrl)
+        {
+            using (HttpClient client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(this.UrlApi);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(this.Header);
+
+                string request = "api/usuarios/insertusuario";
+
+                UsuarioCompletoView usuario = new UsuarioCompletoView();
+                usuario.IdUsuario = await GetNextUsuarioIdAsync();
+                usuario.Nombre = nombre;
+                usuario.Email = email;
+                usuario.Edad = edad;
+                usuario.Nacionalidad = nacionalidad;
+                usuario.PreferenciaViaje = preferenciaViaje;
+                usuario.Clave = clave;
+                usuario.ConfirmarClave = confirmarClave;
+                usuario.AvatarUrl = avatarUrl;
+                usuario.FechaRefistro = DateTime.Now;
+
+                string json = JsonConvert.SerializeObject(usuario);
+                StringContent content = new StringContent(json, Encoding.UTF8, "application/json");
+                HttpResponseMessage response = await client.PostAsync(request, content);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    throw new Exception("Error al registrar usuario: " + response.StatusCode);
+                }
+            }
+        }
+
+
+
+
         public async Task UpdateUsuarioAsync(
         string nombre, string email, int edad, string nacionalidad,
         string preferenciaViaje, string clave, string confirmarClave,
@@ -225,7 +290,6 @@ namespace MvcViajesApiNetCore.Services
                 }
                 else
                 {
-                    // If not found in claims, fallback to getting from the profile
                     UsuarioCompletoView perfil = await GetPerfilAsync();
                     if (perfil != null && perfil.IdUsuario != 0)
                     {
@@ -458,8 +522,6 @@ namespace MvcViajesApiNetCore.Services
             }
         }
 
-
-
         public async Task DeleteLugarAsync(int idLugar)
         {
             string token = this.contextAccessor.HttpContext.User
@@ -477,7 +539,7 @@ namespace MvcViajesApiNetCore.Services
                 client.DefaultRequestHeaders.Accept.Add(this.Header);
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-                string request = "api/lugares/" + idLugar; // Asumiendo que la API espera DELETE en esta ruta
+                string request = "api/lugares/" + idLugar;
                 HttpResponseMessage response = await client.DeleteAsync(request);
 
                 if (!response.IsSuccessStatusCode)
@@ -499,21 +561,379 @@ namespace MvcViajesApiNetCore.Services
             return coment;
         }
 
+        public async Task<Comentario> FindComentarioAsync
+          (int idComentario)
+        {
+            string request = "api/comentarios/findcomentarios/" + idComentario;
+            Comentario coment = await
+                this.CallApiAsync<Comentario>(request);
+            return coment;
+        }
+
+        public async Task<int> GetNextComentarioIdAsync()
+        {
+            using (HttpClient client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(this.UrlApi);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(this.Header);
+
+                string request = "api/comentarios"; // Asume que tienes un endpoint para obtener todos los comentarios
+
+                HttpResponseMessage response = await client.GetAsync(request);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    string json = await response.Content.ReadAsStringAsync();
+                    List<Comentario> comentarios = JsonConvert.DeserializeObject<List<Comentario>>(json);
+                    if (comentarios != null && comentarios.Any())
+                    {
+                        return comentarios.Max(c => c.IdComentario) + 1;
+                    }
+                    else
+                    {
+                        return 1; // Si no hay comentarios, el primer ID será 1
+                    }
+                }
+                else
+                {
+                    throw new Exception("Error al obtener la lista de comentarios para generar el próximo ID: " + response.StatusCode);
+                }
+            }
+        }
+
+        public async Task InsertComentarioAsync(int idLugar, string comentario)
+        {
+            string token = this.contextAccessor.HttpContext.User
+                .FindFirst(z => z.Type == "TOKEN")?.Value;
+
+            if (string.IsNullOrEmpty(token))
+            {
+                throw new UnauthorizedAccessException("No se encontró el token de usuario.");
+            }
+
+            int idUsuario = -1;
+            string nombreUsuario = string.Empty;
+
+            var userIdClaim = this.contextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim != null && int.TryParse(userIdClaim.Value, out idUsuario))
+            {
+                // IdUsuario found in NameIdentifier
+            }
+            else
+            {
+                userIdClaim = this.contextAccessor.HttpContext.User.FindFirst("UserId");
+                if (userIdClaim != null && int.TryParse(userIdClaim.Value, out idUsuario))
+                {
+                    // IdUsuario found in "UserId" claim
+                }
+                else
+                {
+                    // If not found in claims, fallback to getting from the profile
+                    UsuarioCompletoView perfil = await GetPerfilAsync();
+                    if (perfil != null && perfil.IdUsuario != 0)
+                    {
+                        idUsuario = perfil.IdUsuario;
+                        nombreUsuario = perfil.Nombre; // Assuming Nombre is available in UsuarioCompletoView
+                    }
+                    else
+                    {
+                        throw new Exception("No se pudo extraer el IdUsuario del token o del perfil del usuario.");
+                    }
+                }
+            }
+            using (HttpClient client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(this.UrlApi);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(this.Header);
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token); 
+
+                string request = "api/comentarios"; 
+
+                Comentario coment = new Comentario
+                {
+                    IdComentario = await GetNextComentarioIdAsync(), 
+                    IdLugar = idLugar,
+                    IdUsuario = idUsuario,
+                    Comentarios = comentario,
+                    FechaComentario = DateTime.Now,
+                    NombreUsuario = nombreUsuario
+                };
+
+                string json = JsonConvert.SerializeObject(coment);
+                StringContent content = new StringContent(json, Encoding.UTF8, "application/json");
+                HttpResponseMessage response = await client.PostAsync(request, content);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    throw new Exception("Error al updatear usuario: " + response.StatusCode);
+                }
+            }
+        }
+
+        public async Task UpdateComentarioAsync(int idComentario, int idLugar, string comentario, string nombreUsuario)
+        {
+            string token = this.contextAccessor.HttpContext.User
+                .FindFirst(z => z.Type == "TOKEN")?.Value;
+
+            if (string.IsNullOrEmpty(token))
+            {
+                throw new UnauthorizedAccessException("No se encontró el token de usuario.");
+            }
+
+            int idUsuario = -1;
+
+            var userIdClaim = this.contextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim != null && int.TryParse(userIdClaim.Value, out idUsuario))
+            {
+                // IdUsuario found in NameIdentifier
+            }
+            else
+            {
+                userIdClaim = this.contextAccessor.HttpContext.User.FindFirst("UserId");
+                if (userIdClaim != null && int.TryParse(userIdClaim.Value, out idUsuario))
+                {
+                    // IdUsuario found in "UserId" claim
+                }
+                else
+                {
+                    // If not found in claims, fallback to getting from the profile
+                    UsuarioCompletoView perfil = await GetPerfilAsync();
+                    if (perfil != null && perfil.IdUsuario != 0)
+                    {
+                        idUsuario = perfil.IdUsuario;
+                        nombreUsuario = perfil.Nombre;
+                    }
+                    else
+                    {
+                        throw new Exception("No se pudo extraer el IdUsuario del token o del perfil del usuario.");
+                    }
+                }
+            }
+
+            using (HttpClient client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(this.UrlApi);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(this.Header);
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                string request = "api/comentarios/updatecomentarios/" +  idComentario; 
+
+                Comentario coment = new Comentario
+                {
+                    IdComentario = idComentario,
+                    IdLugar = idLugar,
+                    IdUsuario = idUsuario,
+                    Comentarios = comentario,
+                    FechaComentario = DateTime.Now, 
+                    NombreUsuario = nombreUsuario
+                };
+
+                string json = JsonConvert.SerializeObject(coment);
+                StringContent content = new StringContent(json, Encoding.UTF8, "application/json");
+                HttpResponseMessage response = await client.PutAsync(request, content);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    string errorContent = await response.Content.ReadAsStringAsync();
+                    throw new Exception($"Error al actualizar el comentario: {response.StatusCode} - {errorContent}");
+                }
+            }
+        }
+
+        public async Task DeleteComentarioAsync(int idComentario)
+        {
+            string token = this.contextAccessor.HttpContext.User
+                .FindFirst(z => z.Type == "TOKEN")?.Value;
+
+            if (string.IsNullOrEmpty(token))
+            {
+                throw new UnauthorizedAccessException("No se encontró el token de usuario.");
+            }
+
+            using (HttpClient client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(this.UrlApi);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(this.Header);
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                string request = $"api/comentarios/{idComentario}"; // Endpoint para eliminar, incluyendo el ID
+
+                HttpResponseMessage response = await client.DeleteAsync(request);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    string errorContent = await response.Content.ReadAsStringAsync();
+                    throw new Exception($"Error al eliminar el comentario: {response.StatusCode} - {errorContent}");
+                }
+            }
+        }
         #endregion
 
         #region ZONA FAVORITOS
 
+        public async Task<List<LugarFavorito>> GetFavoritosAsync()
+        {
+            string token = this.contextAccessor.HttpContext.User
+                .FindFirst(z => z.Type == "TOKEN")?.Value;
+
+            if (string.IsNullOrEmpty(token))
+            {
+                throw new UnauthorizedAccessException("Token de usuario no encontrado para obtener todos los favoritos.");
+            }
+
+            string request = "api/favoritos"; 
+            List<LugarFavorito> favoritos = await
+                this.CallApiAsync<List<LugarFavorito>>(request, token); 
+
+            return favoritos;
+        }
+
         public async Task<List<LugarFavorito>> GetFavoritosUsuarioAsync(int idusuario)
         {
-            string token =
-                this.contextAccessor.HttpContext.User
+            string token = this.contextAccessor.HttpContext.User
                 .FindFirst(z => z.Type == "TOKEN")?.Value;
-            string request = "api/favoritos/" + idusuario;
-            LugarFavorito favorito = await 
-                this.CallApiAsync<LugarFavorito>(request, token);
 
-            return new List<LugarFavorito> { favorito };
+            string request = "api/favoritos/" + idusuario;
+
+            List<LugarFavorito> favoritos = await
+                this.CallApiAsync<List<LugarFavorito>>(request, token);
+
+            return favoritos;
         }
+
+        public async Task<int> GetNextFavoritoIdAsync()
+        {
+            // Calls the method to get ALL favorites
+            List<LugarFavorito> allFavoritos = await GetFavoritosAsync();
+
+            if (allFavoritos != null && allFavoritos.Any())
+            {
+                return allFavoritos.Max(f => f.IdFavorito) + 1;
+            }
+            else
+            {
+                return 1;
+            }
+        }
+
+        public async Task InsertFavoritoAsync(int idLugar)
+        {
+            string token = this.contextAccessor.HttpContext.User
+               .FindFirst(z => z.Type == "TOKEN")?.Value;
+
+            if (string.IsNullOrEmpty(token))
+            {
+                throw new UnauthorizedAccessException("No se encontró el token de usuario.");
+            }
+
+            int idUsuario = -1;
+
+            var userIdClaim = this.contextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim != null && int.TryParse(userIdClaim.Value, out idUsuario))
+            {
+                // IdUsuario found in NameIdentifier
+            }
+            else
+            {
+                userIdClaim = this.contextAccessor.HttpContext.User.FindFirst("UserId");
+                if (userIdClaim != null && int.TryParse(userIdClaim.Value, out idUsuario))
+                {
+                    // IdUsuario found in "UserId" claim
+                }
+                else
+                {
+                    // If not found in claims, fallback to getting from the profile
+                    UsuarioCompletoView perfil = await GetPerfilAsync();
+                    if (perfil != null && perfil.IdUsuario != 0)
+                    {
+                        idUsuario = perfil.IdUsuario;
+                    }
+                    else
+                    {
+                        throw new Exception("No se pudo extraer el IdUsuario del token o del perfil del usuario.");
+                    }
+                }
+            }
+
+            Lugar lugarDetails = await FindLugarAsync(idLugar); 
+            if (lugarDetails == null)
+            {
+                throw new Exception($"No se encontró el lugar con IdLugar {idLugar} para marcar como favorito.");
+            }
+
+  
+            int newIdFavorito = await GetNextFavoritoIdAsync();
+
+            LugarFavorito favorito = new LugarFavorito
+            {
+                IdFavorito = newIdFavorito, 
+                IdUsuario = idUsuario, 
+                IdLugar = idLugar,
+                ImagenLugar = lugarDetails.Imagen,
+                NombreLugar = lugarDetails.Nombre,
+                DescripcionLugar = lugarDetails.Descripcion,
+                UbicacionLugar = lugarDetails.Ubicacion,
+                TipoLugar = lugarDetails.Tipo,
+                FechaDeVisitaLugar = DateTime.Now 
+            };
+
+            using (HttpClient client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(this.UrlApi);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(this.Header);
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                string request = "api/favoritos"; 
+                string json = JsonConvert.SerializeObject(favorito);
+                StringContent content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                HttpResponseMessage response = await client.PostAsync(request, content);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    string errorContent = await response.Content.ReadAsStringAsync();
+                    throw new Exception($"Error al insertar favorito: {response.StatusCode} - {errorContent}");
+                }
+
+            }
+        }
+        public async Task DeleteFavoritosAsync(int idUsuario, int idLugar)
+        {
+            string token = this.contextAccessor.HttpContext.User
+                .FindFirst(z => z.Type == "TOKEN")?.Value;
+
+            if (string.IsNullOrEmpty(token))
+            {
+                throw new UnauthorizedAccessException("No se encontró el token de usuario.");
+            }
+
+            using (HttpClient client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(this.UrlApi);
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Accept.Add(this.Header);
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                string request = "api/favoritos/" + idUsuario + "/" + idLugar;
+                HttpResponseMessage response = await client.DeleteAsync(request);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    throw new Exception($"Error al eliminar lugar: {response.StatusCode}");
+                }
+            }
+        }
+
+
+        #endregion
+
+        #region ZONA SEGUIDORES
+
 
         #endregion
 

@@ -1,4 +1,12 @@
-﻿@model List<Comentario>
+﻿@using System.Security.Claims
+@model List<Comentario>
+
+@{
+    // Obtén el valor de ViewData y maneja la posible nulidad con Convert.ToInt32 o con un valor por defecto
+    int idusuario = ViewData["IdUsuarioActual"] != null
+        ? Convert.ToInt32(ViewData["IdUsuarioActual"])
+        : -1; // o cualquier valor por defecto si no hay un IdUsuarioActual
+}
 
 <div class="comentarios-container">
     @if (Model != null && Model.Count > 0)
@@ -11,13 +19,16 @@
                         <img src="https://img.freepik.com/psd-gratis/ilustracion-3d-avatar-o-perfil-humano_23-2150671116.jpg" alt="Avatar" class="comment-avatar" />
                         <div class="user-details">
                             <h5 class="user-name">@comentario.NombreUsuario</h5>
-                            <span class="comment-date">@comentario.FechaComentario.ToString("dd MMM yyyy, HH:mm")</span>
+                            <span class="comment-date">@comentario.FechaComentario.ToString("dd MMM, HH:mm")</span>
                         </div>
                     </div>
-                    @if (comentario.IdUsuario == Context.Session.GetInt32("IdUsuario"))
+                    @if (User.Identity.IsAuthenticated && comentario.IdUsuario == idusuario)
                     {
                         <div class="comment-actions">
-                            <button class="btn-action eliminar-comentario" title="Eliminar comentario">
+                            <button class="btn-action editar-comentario" title="EditComment" data-comentario-texto="@comentario.Comentarios">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn-action eliminar-comentario" title="DeleteComment">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
@@ -39,7 +50,7 @@
     }
 </div>
 
-<!-- Estilos CSS -->
+
 <style>
     :root {
         --primary-color: #2c6e49;
@@ -133,6 +144,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        margin-left: 5px; /* Espacio entre los botones */
     }
 
         .btn-action:hover {
@@ -204,7 +216,6 @@
         }
 </style>
 
-<!-- Incluye SweetAlert2 y FontAwesome si no están ya incluidos -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 <script>
@@ -224,7 +235,7 @@
                 showCancelButton: true,
                 confirmButtonText: 'Eliminar',
                 cancelButtonText: 'Cancelar',
-                confirmButtonColor: '#2c6e49',
+                confirmButtonColor: '#dc3545', // Cambié el color para eliminar
                 cancelButtonColor: '#6c757d',
                 reverseButtons: true,
                 borderRadius: 10,
@@ -243,7 +254,7 @@
 
                     // Si el usuario confirma, realizar la petición AJAX para eliminar
                     $.ajax({
-                        url: '/Lugares/DeleteComentario',
+                        url: '/Lugares/DeleteComment',
                         type: 'POST',
                         data: { idComentario: comentarioId, idLugar: lugarId },
                         success: function() {
@@ -290,5 +301,72 @@
                 }
             });
         });
-    });
+
+           $(document).on('click', '.editar-comentario', function(e) {
+               e.preventDefault();
+               var comentarioCard = $(this).closest('.comment-card');
+               var comentarioId = comentarioCard.data('comentario-id');
+               var lugarId = comentarioCard.data('lugar-id'); 
+               var comentarioTexto = $(this).data('comentario-texto');
+
+               Swal.fire({
+                   title: 'Editar Comentario',
+                   html: `<textarea id="swal-input-comentario" class="swal2-input" style="display: block;">${comentarioTexto}</textarea>`,
+                   showCancelButton: true,
+                   confirmButtonText: 'Guardar Cambios',
+                   cancelButtonText: 'Cancelar',
+                   confirmButtonColor: '#2c6e49',
+                   cancelButtonColor: '#6c757d',
+                   preConfirm: () => {
+                       const nuevoComentario = Swal.getPopup().querySelector('#swal-input-comentario').value;
+                       if (!nuevoComentario) {
+                           Swal.showValidationMessage(`Por favor, introduce un comentario`);
+                       }
+                       return { nuevoComentario: nuevoComentario };
+                   }
+               }).then((result) => {
+                   if (result.isConfirmed) {
+                       Swal.fire({
+                           title: 'Guardando...',
+                           text: 'Por favor espera',
+                           allowOutsideClick: false,
+                           didOpen: () => {
+                               Swal.showLoading();
+                           }
+                       });
+
+                       $.ajax({
+                           url: '/Lugares/EditComment/' + lugarId, // Include idlugar in the URL path
+                           type: 'POST',
+                           // Send idComentario and the new comentario text
+                           data: {
+                                idComentario: comentarioId,
+                                comentario: result.value.nuevoComentario
+                                // idLugar is now in the URL path, but sending it in data is often harmless/redundant
+                           },
+                           success: function(response) {
+                               Swal.fire({
+                                   title: '¡Comentario Editado!',
+                                   text: 'El comentario ha sido editado con éxito.',
+                                   icon: 'success',
+                                   confirmButtonColor: '#2c6e49',
+                                   timer: 2000,
+                                   timerProgressBar: true
+                               }).then(() => {
+                                   window.location.reload(); // Reload to show changes
+                               });
+                           },
+                           error: function(error) {
+                               Swal.fire({
+                                   title: 'Error',
+                                   text: 'No se pudo editar el comentario. Intenta de nuevo más tarde.',
+                                   icon: 'error',
+                                   confirmButtonColor: '#dc3545'
+                               });
+                           }
+                       });
+                   }
+               });
+           });
+       });
 </script>
